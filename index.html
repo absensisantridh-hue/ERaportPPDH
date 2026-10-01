@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Raport Santri - Darul Hikmah</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f4f6f9; margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 1050px; margin: 0 auto; background: #ffffffbe; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgb(0, 0, 0); }
+        h1, h2, h3 { text-align: center; margin: 5px 0; }
+        
+        /* Navigation Tabs */
+        .nav-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #ddd; flex-wrap: wrap; }
+        .tab-btn { padding: 10px 20px; border: none; background: #e9ecef; cursor: pointer; border-radius: 5px 5px 0 0; font-weight: bold; }
+        .tab-btn.active { background: #0d6efd; color: white; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* Form Styles */
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+        .btn { padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-primary { background: #0d6efd; color: white; }
+        .btn-success { background: #198754; color: white; }
+        .btn-danger { background: #dc3545; color: white; padding: 4px 8px; font-size: 12px; }
+
+        /* Spreadsheet Style (Input Nilai) */
+        .table-responsive { width: 100%; overflow-x: auto; margin-top: 15px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #aaa; padding: 6px 8px; text-align: center; font-size: 14px; }
+        th { background-color: #e9ecef; position: sticky; top: 0; }
+        .input-sheet { width: 100%; min-width: 50px; text-align: center; padding: 4px; border: 1px solid #ddd; border-radius: 2px; }
+        .input-sheet:focus { outline: 2px solid #0d6efd; background-color: #e8f0fe; }
+
+        /* RAPORT BOX & LAYOUT A4 */
+        .raport-box {
+            width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto 20px auto;
+            padding: 15mm 20mm;
+            border: 2px solid #000;
+            background: #fff;
+            box-sizing: border-box;
+            color: #000;
+        }
+
+        /* Kop Raport Logo & Teks */
+        .kop-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 2px solid #000;
+            padding-bottom: 12px;
+            margin-bottom: 15px;
+        }
+        .kop-logo { width: 100px; text-align: center; }
+        .kop-logo img { width: 100px; height: auto; }
+        .kop-teks { flex: 1; text-align: center; }
+        .title-ar {
+            font-family: 'Amiri', 'Traditional Arabic', 'Scheherazade New', serif;
+            font-size: 40px;
+            font-weight: bold;
+            margin: 2px 0;
+            direction: rtl;
+        }
+        .subtitle-ar {
+            font-family: 'Amiri', 'Traditional Arabic', serif;
+            font-size: 15px;
+            direction: rtl;
+        }
+
+        /* Layout Informasi Santri */
+        .info-grid { display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 15px; }
+        .info-col { width: 48%; }
+        .info-row { display: flex; margin-bottom: 4px; }
+        .info-label { width: 80px; font-weight: bold; }
+        .info-val { flex: 1; }
+
+        /* Tabel Raport Bahasa Arab */
+        .arabic-table {
+            direction: rtl;
+            font-family: 'Amiri', 'Traditional Arabic', serif;
+            margin-bottom: -1px;
+            width: 100%;
+        }
+        .arabic-table th, .arabic-table td { border: 1px solid #000; padding: 6px; }
+        .nilai-merah { color: red; font-weight: bold; }
+
+        /* TABEL ABSENSI (SESUAI FOTO) */
+        .table-absensi {
+            direction: rtl;
+            font-family: 'Amiri', 'Traditional Arabic', serif;
+            width: 100%;
+            margin-top: -1px;
+            margin-bottom: 25px;
+            border-collapse: collapse;
+        }
+        .table-absensi td {
+            border: 1px solid #000;
+            padding: 6px;
+            text-align: center;
+            font-size: 15px;
+        }
+
+        /* TABEL TANDA TANGAN 3 KOTAK (SESUAI FOTO) */
+        .table-ttd {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        .table-ttd td {
+            border: 1px solid #000;
+            width: 33.33%;
+            height: 130px;
+            vertical-align: top;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        .ttd-box-content {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .ttd-jabatan-ar {
+            direction: rtl;
+            font-family: 'Amiri', 'Traditional Arabic', serif;
+            font-size: 16px;
+            font-weight: bold;
+            text-align: center;
+        }
+        .ttd-nama-latin {
+            text-align: center;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        /* Pemisah Halaman Saat Cetak Banyak Santri */
+        .page-break {
+            page-break-after: always;
+            break-after: page;
+        }
+
+        /* Print Settings untuk A4 */
+        @page {
+            size: A4 portrait;
+            margin: 0;
+        }
+        @media print {
+            body { background: #fff; padding: 0; margin: 0; }
+            .no-print, .nav-tabs { display: none !important; }
+            .container { padding: 0; max-width: 100%; box-shadow: none; }
+            .raport-box {
+                border: none;
+                width: 100%;
+                height: 100%;
+                padding: 15mm 20mm;
+                margin: 0;
+            }
+        }
+        body {
+    /* Menggunakan gambar background (ganti URL gambar sesuai keinginan) */
+    background: linear-gradient(rgba(252, 253, 253, 0), rgba(251, 251, 253, 0)), 
+                url('bg-ponpes.jpg') no-repeat center center fixed;
+    background-size: cover;
+    ...
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="nav-tabs no-print">
+        <button class="tab-btn active" onclick="switchTab('input-santri', this)">1. Input Santri</button>
+        <button class="tab-btn" onclick="switchTab('input-nilai', this)">2. Input Nilai & Kehadiran (Sheet)</button>
+        <button class="tab-btn" onclick="switchTab('kelola-mapel', this)">3. Kelola Mapel & KKM</button>
+        <button class="tab-btn" onclick="switchTab('ranking', this)">4. Ranking</button>
+        <button class="tab-btn" onclick="switchTab('cetak-raport', this)">5. Cetak Raport</button>
+    </div>
+
+    <!-- TAB 1: INPUT SANTRI -->
+    <div id="input-santri" class="tab-content active">
+        <h2>Tambah Data Santri Baru</h2>
+        <div class="form-group">
+            <label>NIS Santri:</label>
+            <input type="text" id="s-nis" placeholder="Contoh: 101">
+        </div>
+        <div class="form-group">
+            <label>Nama Santri (Latin):</label>
+            <input type="text" id="s-nama" placeholder="Contoh: Ahmad Ainun Khairi Arifin">
+        </div>
+        <div class="form-group">
+            <label>Nama Wali (Latin):</label>
+            <input type="text" id="s-wali" placeholder="Contoh: MZ. ARIFIN">
+        </div>
+        <div class="form-group">
+            <label>Pilih Kelas & Ruang:</label>
+            <select id="s-kelas-ruang"></select>
+        </div>
+        <div class="form-group">
+            <label>Semester:</label>
+            <select id="s-semester">
+                <option value="Ganjil">Ganjil</option>
+                <option value="Genap">Genap</option>
+            </select>
+        </div>
+        <button class="btn btn-primary" onclick="tambahSantri()">Simpan Santri</button>
+    </div>
+
+    <!-- TAB 2: INPUT NILAI & KEHADIRAN (SPREADSHEET FORMAT) -->
+    <div id="input-nilai" class="tab-content">
+        <h2>Input Nilai & Kehadiran (Bentuk Google Sheet)</h2>
+        
+        <div style="display: flex; gap: 20px; align-items: flex-end; margin-bottom: 15px; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 200px;">
+                <label>Pilih Kelas & Ruang:</label>
+                <select id="filter-kelas-nilai" onchange="loadFormNilaiSheet()"></select>
+            </div>
+            <div style="flex: 1; min-width: 200px;">
+                <label>Wali Kelas / Mudarris (Latin):</label>
+                <input type="text" id="cfg-mudarris" placeholder="Nama Wali Kelas" onchange="updateTTDKelas()">
+            </div>
+            <div style="flex: 1; min-width: 200px;">
+                <label>Rais Madrasah (Latin):</label>
+                <input type="text" id="cfg-rais" placeholder="Nama Rais Madrasah" onchange="updateTTDKelas()">
+            </div>
+        </div>
+
+        <div class="table-responsive" id="container-sheet"></div>
+    </div>
+
+    <!-- TAB 3: KELOLA MAPEL & KKM PER KELAS -->
+    <div id="kelola-mapel" class="tab-content">
+        <h2>Kelola Mata Pelajaran & KKM Per Kelas</h2>
+        <div class="form-group">
+            <label>Pilih Kelas Yang Ingin Diatur Mapelnya:</label>
+            <select id="filter-kelas-mapel" onchange="renderMapelTable()"></select>
+        </div>
+        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+            <input type="text" id="m-nama" placeholder="Nama Mapel / Kitab (Bahasa Arab)">
+            <input type="number" id="m-kkm" placeholder="KKM (Misal: 70)" style="width: 150px;">
+            <button class="btn btn-success" onclick="tambahMapel()">Tambah Mapel</button>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>No</th>
+                    <th>Nama Mata Pelajaran / Kitab (Arab)</th>
+                    <th>KKM</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody id="tabel-mapel"></tbody>
+        </table>
+    </div>
+
+    <!-- TAB 4: RANKING -->
+    <div id="ranking" class="tab-content">
+        <h2>Ranking Santri</h2>
+        <div class="form-group">
+            <label>Pilih Kelas & Ruang:</label>
+            <select id="filter-ranking-kelas" onchange="renderRanking()"></select>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Rank Paralel (Per Tingkat)</th>
+                    <th>Rank Kelas (Per Ruang)</th>
+                    <th>NIS</th>
+                    <th>Nama Santri</th>
+                    <th>Rata-rata Nilai</th>
+                </tr>
+            </thead>
+            <tbody id="tabel-ranking"></tbody>
+        </table>
+    </div>
+
+    <!-- TAB 5: CETAK RAPORT -->
+    <div id="cetak-raport" class="tab-content">
+        <div class="no-print" style="margin-bottom: 20px; background: #f8f9fa; padding: 15px; border: 1px solid #ddd; border-radius: 6px;">
+            <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
+                <div>
+                    <label>Pilih Santri (Cetak 1 Santri):</label>
+                    <select id="select-cetak-santri" onchange="renderRaportIndividu()" style="min-width: 250px;"></select>
+                </div>
+                <div>
+                    <label>Pilih Kelas (Cetak 1 Kelas):</label>
+                    <select id="select-cetak-kelas" style="min-width: 200px;"></select>
+                </div>
+            </div>
+            <div style="margin-top: 15px; display: flex; gap: 10px;">
+                <button class="btn btn-primary" onclick="cetakSatuSantri()">Cetak 1 Santri Ini</button>
+                <button class="btn btn-success" onclick="cetakSatuKelas()">Cetak Semua Santri (1 Kelas)</button>
+            </div>
+        </div>
+
+        <!-- AREA RENDER DOKUMEN CETAK -->
+        <div id="area-semua-raport"></div>
+    </div>
+</div>
+
+<script>
+    function toArabicDigits(num) {
+        if (num === null || num === undefined || isNaN(num)) return '٠';
+        const arabicDigits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+        return num.toString().replace(/\d/g, digit => arabicDigits[digit]);
+    }
+
+    const daftar15Kelas = [
+        { namaFull: "Kelas 1 A", tingkat: "1", ruang: "A" },
+        { namaFull: "Kelas 1 B", tingkat: "1", ruang: "B" },
+        { namaFull: "Kelas 1 C", tingkat: "1", ruang: "C" },
+        { namaFull: "Kelas 1 D", tingkat: "1", ruang: "D" },
+        { namaFull: "Kelas 2 A", tingkat: "2", ruang: "A" },
+        { namaFull: "Kelas 2 B", tingkat: "2", ruang: "B" },
+        { namaFull: "Kelas 2 C", tingkat: "2", ruang: "C" },
+        { namaFull: "Kelas 2 D", tingkat: "2", ruang: "D" },
+        { namaFull: "Kelas 3 A", tingkat: "3", ruang: "A" },
+        { namaFull: "Kelas 3 B", tingkat: "3", ruang: "B" },
+        { namaFull: "Kelas 3 C", tingkat: "3", ruang: "C" },
+        { namaFull: "Kelas 3 D", tingkat: "3", ruang: "D" },
+        { namaFull: "Kelas 4 Putra", tingkat: "4", ruang: "Putra" },
+        { namaFull: "Kelas 4 Putri", tingkat: "4", ruang: "Putri" },
+        { namaFull: "Kelas 5 Putra", tingkat: "5", ruang: "Putra" },
+        { namaFull: "Kelas 5 Putri", tingkat: "5", ruang: "Putri" },
+        { namaFull: "Kelas 6 Putra", tingkat: "6", ruang: "Putra" },
+        { namaFull: "Kelas 6 Putri", tingkat: "6", ruang: "Putri" },
+    ];
+
+    const defaultMapelStandard = [
+        { nama: "القرآن الكريم", kkm: 70 },
+        { nama: "المبادئ الفقهية", kkm: 70 },
+        { nama: "شفاء الجنان", kkm: 70 },
+        { nama: "الأجرومية", kkm: 70 },
+        { nama: "الأمثلة التصريفية", kkm: 70 },
+        { nama: "الفيقون", kkm: 70 },
+        { nama: "الإملاء", kkm: 70 },
+        { nama: "تطبيق الوضوء", kkm: 70 },
+        { nama: "تطبيق الصلاة", kkm: 70 },
+        { nama: "تطبيق القراءة", kkm: 70 }
+    ];
+
+    let mapelPerKelas = {};
+    let ttdPerKelas = {};
+
+    daftar15Kelas.forEach(k => {
+        mapelPerKelas[k.namaFull] = JSON.parse(JSON.stringify(defaultMapelStandard));
+        ttdPerKelas[k.namaFull] = {
+            mudarris: "Wahyu Yahya Andika",
+            rais: "Moh. Nur Huda"
+        };
+    });
+
+    let santriDb = [
+        {
+            nis: "101",
+            nama: "Ahmad Ainun Khairi Arifin",
+            wali: "MZ. ARIFIN",
+            kelasFull: "Kelas 1 A",
+            kelas: "1",
+            ruang: "A",
+            semester: "Ganjil",
+            kehadiran: { S: 7, I: 2, A: 1 },
+            nilai: {}
+        }
+    ];
+
+    window.onload = function() {
+        initDropdowns();
+        renderMapelTable();
+    };
+
+    function initDropdowns() {
+        const sKelas = document.getElementById('s-kelas-ruang');
+        const fKelas = document.getElementById('filter-kelas-nilai');
+        const mMapel = document.getElementById('filter-kelas-mapel');
+        const rKelas = document.getElementById('filter-ranking-kelas');
+        
+        sKelas.innerHTML = ''; fKelas.innerHTML = ''; mMapel.innerHTML = ''; rKelas.innerHTML = '';
+        daftar15Kelas.forEach(k => {
+            sKelas.innerHTML += `<option value="${k.namaFull}">${k.namaFull}</option>`;
+            fKelas.innerHTML += `<option value="${k.namaFull}">${k.namaFull}</option>`;
+            mMapel.innerHTML += `<option value="${k.namaFull}">${k.namaFull}</option>`;
+            rKelas.innerHTML += `<option value="${k.namaFull}">${k.namaFull}</option>`;
+        });
+        loadFormNilaiSheet();
+    }
+
+    function switchTab(tabId, btnEl) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        
+        document.getElementById(tabId).classList.add('active');
+        if (btnEl) btnEl.classList.add('active');
+
+        if(tabId === 'input-nilai') loadFormNilaiSheet();
+        if(tabId === 'kelola-mapel') renderMapelTable();
+        if(tabId === 'ranking') renderRanking();
+        if(tabId === 'cetak-raport') initCetakDropdown();
+    }
+
+    function updateTTDKelas() {
+        const kelasKey = document.getElementById('filter-kelas-nilai').value;
+        if (!ttdPerKelas[kelasKey]) ttdPerKelas[kelasKey] = { mudarris: '', rais: '' };
+        
+        ttdPerKelas[kelasKey].mudarris = document.getElementById('cfg-mudarris').value;
+        ttdPerKelas[kelasKey].rais = document.getElementById('cfg-rais').value;
+    }
+
+    /* MAPEL MANAGEMENT */
+    function renderMapelTable() {
+        const kelasKey = document.getElementById('filter-kelas-mapel').value;
+        const listMapel = mapelPerKelas[kelasKey] || [];
+        const tbody = document.getElementById('tabel-mapel');
+        tbody.innerHTML = '';
+        listMapel.forEach((m, idx) => {
+            tbody.innerHTML += `
+                <tr>
+                    <td>${idx + 1}</td>
+                    <td style="text-align:left; font-family:'Amiri', serif; font-size:16px;">${m.nama}</td>
+                    <td>${m.kkm}</td>
+                    <td><button class="btn btn-danger" onclick="hapusMapel(${idx})">Hapus</button></td>
+                </tr>`;
+        });
+    }
+
+    function tambahMapel() {
+        const kelasKey = document.getElementById('filter-kelas-mapel').value;
+        const nama = document.getElementById('m-nama').value;
+        const kkm = parseFloat(document.getElementById('m-kkm').value);
+
+        if(nama && kkm) {
+            if(!mapelPerKelas[kelasKey]) mapelPerKelas[kelasKey] = [];
+            mapelPerKelas[kelasKey].push({ nama, kkm });
+
+            document.getElementById('m-nama').value = '';
+            document.getElementById('m-kkm').value = '';
+            renderMapelTable();
+            alert(`Mapel berhasil ditambahkan ke ${kelasKey}!`);
+        } else {
+            alert('Harap isi nama mapel dan KKM dengan benar!');
+        }
+    }
+
+    function hapusMapel(idx) {
+        const kelasKey = document.getElementById('filter-kelas-mapel').value;
+        mapelPerKelas[kelasKey].splice(idx, 1);
+        renderMapelTable();
+    }
+
+    /* SANTRI MANAGEMENT */
+    function tambahSantri() {
+        const nis = document.getElementById('s-nis').value;
+        const nama = document.getElementById('s-nama').value;
+        const wali = document.getElementById('s-wali').value;
+        const kelasKey = document.getElementById('s-kelas-ruang').value;
+        const semester = document.getElementById('s-semester').value;
+
+        const detailKelas = daftar15Kelas.find(k => k.namaFull === kelasKey);
+
+        if(!nis || !nama || !wali) { alert('NIS, Nama Santri, dan Nama Wali wajib diisi!'); return; }
+
+        santriDb.push({
+            nis, nama, wali, 
+            kelasFull: detailKelas.namaFull,
+            kelas: detailKelas.tingkat,
+            ruang: detailKelas.ruang,
+            semester,
+            kehadiran: { S: 0, I: 0, A: 0 },
+            nilai: {}
+        });
+
+        alert('Santri berhasil ditambahkan!');
+        document.getElementById('s-nis').value = '';
+        document.getElementById('s-nama').value = '';
+        document.getElementById('s-wali').value = '';
+    }
+
+    function hapusSantri(nis) {
+        if(confirm(`Yakin ingin menghapus santri dengan NIS ${nis}?`)) {
+            santriDb = santriDb.filter(s => s.nis !== nis);
+            loadFormNilaiSheet();
+            alert('Santri berhasil dihapus!');
+        }
+    }
+
+    /* INPUT NILAI SHEET FORMAT */
+    function loadFormNilaiSheet() {
+        const kelasKey = document.getElementById('filter-kelas-nilai').value;
+
+        const dataTTD = ttdPerKelas[kelasKey] || { mudarris: '', rais: '' };
+        document.getElementById('cfg-mudarris').value = dataTTD.mudarris;
+        document.getElementById('cfg-rais').value = dataTTD.rais;
+
+        const container = document.getElementById('container-sheet');
+        const santriKelas = santriDb.filter(s => s.kelasFull === kelasKey);
+        const listMapelKelas = mapelPerKelas[kelasKey] || [];
+
+        if(santriKelas.length === 0) {
+            container.innerHTML = '<p style="margin-top:15px; text-align:center;">Belum ada santri di kelas ini.</p>';
+            return;
+        }
+
+        let html = `<table>
+            <thead>
+                <tr>
+                    <th rowspan="2" style="width:40px;">No</th>
+                    <th rowspan="2" style="width:60px;">NIS</th>
+                    <th rowspan="2" style="min-width:180px;">Nama Santri</th>
+                    <th colspan="3">Kehadiran</th>
+                    <th colspan="${listMapelKelas.length}">Nilai Mata Pelajaran</th>
+                    <th rowspan="2" style="width:60px;">Aksi</th>
+                </tr>
+                <tr>
+                    <th style="width:45px;">Sakit</th>
+                    <th style="width:45px;">Izin</th>
+                    <th style="width:45px;">Alpha</th>`;
+        
+        listMapelKelas.forEach(m => {
+            html += `<th style="min-width:90px; font-family:'Amiri', serif; font-size:14px;">${m.nama}</th>`;
+        });
+
+        html += `</tr></thead><tbody>`;
+
+        santriKelas.forEach((s, idx) => {
+            html += `<tr>
+                <td>${idx + 1}</td>
+                <td>${s.nis}</td>
+                <td style="text-align:left; font-weight:bold;">${s.nama}</td>
+                <td><input type="number" class="input-sheet" value="${s.kehadiran.S}" onchange="updateHadir('${s.nis}', 'S', this.value)"></td>
+                <td><input type="number" class="input-sheet" value="${s.kehadiran.I}" onchange="updateHadir('${s.nis}', 'I', this.value)"></td>
+                <td><input type="number" class="input-sheet" value="${s.kehadiran.A}" onchange="updateHadir('${s.nis}', 'A', this.value)"></td>`;
+            
+            listMapelKelas.forEach(m => {
+                const valAkhir = s.nilai[m.nama] ? s.nilai[m.nama].akhir : 0;
+                html += `<td><input type="number" class="input-sheet" value="${valAkhir}" onchange="updateNilai('${s.nis}', '${m.nama}', this.value)"></td>`;
+            });
+
+            html += `<td><button class="btn btn-danger" onclick="hapusSantri('${s.nis}')">Hapus</button></td></tr>`;
+        });
+
+        html += `</tbody></table>`;
+        container.innerHTML = html;
+    }
+
+    function updateHadir(nis, type, val) {
+        let s = santriDb.find(x => x.nis === nis);
+        if(s) s.kehadiran[type] = parseInt(val) || 0;
+    }
+
+    function updateNilai(nis, mapel, val) {
+        let s = santriDb.find(x => x.nis === nis);
+        if(s) {
+            if(!s.nilai[mapel]) s.nilai[mapel] = { akhir: 0 };
+            s.nilai[mapel].akhir = parseFloat(val) || 0;
+        }
+    }
+
+    function hitungNilaiKhususParalel(tingkat, mapelNama) {
+        const santriTingkat = santriDb.filter(s => s.kelas === tingkat);
+        if (santriTingkat.length === 0) return 0;
+
+        let total = 0;
+        let count = 0;
+
+        santriTingkat.forEach(s => {
+            if (s.nilai && s.nilai[mapelNama] !== undefined) {
+                total += s.nilai[mapelNama].akhir || 0;
+                count++;
+            }
+        });
+
+        return count > 0 ? (total / count) : 0;
+    }
+
+    function getRataRata(santri) {
+        let total = 0;
+        let count = 0;
+        const listMapelKelas = mapelPerKelas[santri.kelasFull] || [];
+
+        listMapelKelas.forEach(m => {
+            if(santri.nilai[m.nama]) {
+                total += santri.nilai[m.nama].akhir;
+                count++;
+            }
+        });
+        return count > 0 ? total / count : 0;
+    }
+
+    function renderRanking() {
+        const kelasKey = document.getElementById('filter-ranking-kelas').value;
+        const detailKelas = daftar15Kelas.find(k => k.namaFull === kelasKey);
+        const tbody = document.getElementById('tabel-ranking');
+        tbody.innerHTML = '';
+        
+        let paralelList = santriDb.filter(s => s.kelas === detailKelas.tingkat);
+        let sortedParalel = [...paralelList].sort((a, b) => getRataRata(b) - getRataRata(a));
+
+        let ruangList = santriDb.filter(s => s.kelasFull === kelasKey);
+        let sortedRuang = [...ruangList].sort((a, b) => getRataRata(b) - getRataRata(a));
+
+        sortedRuang.forEach((s) => {
+            let rankParalel = sortedParalel.findIndex(x => x.nis === s.nis) + 1;
+            let rankKelas = sortedRuang.findIndex(x => x.nis === s.nis) + 1;
+
+            tbody.innerHTML += `<tr>
+                <td>Rank ${rankParalel} (dari ${paralelList.length} Santri)</td>
+                <td>Rank ${rankKelas} (dari ${ruangList.length} Santri)</td>
+                <td>${s.nis}</td>
+                <td style="text-align:left;">${s.nama}</td>
+                <td>${getRataRata(s).toFixed(2)}</td>
+            </tr>`;
+        });
+    }
+
+    /* CETAK RAPORT & GENERATOR RAPORT HTML */
+    function initCetakDropdown() {
+        const selSantri = document.getElementById('select-cetak-santri');
+        const selKelas = document.getElementById('select-cetak-kelas');
+        
+        selSantri.innerHTML = '';
+        selKelas.innerHTML = '';
+
+        daftar15Kelas.forEach(k => {
+            selKelas.innerHTML += `<option value="${k.namaFull}">${k.namaFull}</option>`;
+        });
+
+        santriDb.forEach(s => {
+            selSantri.innerHTML += `<option value="${s.nis}">${s.nama} - ${s.kelasFull}</option>`;
+        });
+
+        renderRaportIndividu();
+    }
+
+    function generateRaportHtml(s, isLastPage = true) {
+        const listMapelKelas = mapelPerKelas[s.kelasFull] || [];
+        const ttdKelas = ttdPerKelas[s.kelasFull] || { mudarris: '-', rais: '-' };
+
+        let total = 0;
+        let tabelNilaiHtml = '';
+
+        listMapelKelas.forEach((m, idx) => {
+            const valAkhir = s.nilai[m.nama] ? s.nilai[m.nama].akhir : 0;
+            total += valAkhir;
+
+            const valKhusus = hitungNilaiKhususParalel(s.kelas, m.nama);
+            const classKhusus = valKhusus < m.kkm ? 'nilai-merah' : '';
+            const classAkhir = valAkhir < m.kkm ? 'nilai-merah' : '';
+
+            tabelNilaiHtml += `<tr>
+                <td>${toArabicDigits(idx + 1)}</td>
+                <td style="text-align: right; font-weight: bold; font-size:16px;">${m.nama}</td>
+                <td>${toArabicDigits(m.kkm)}</td>
+                <td class="${classKhusus}">${toArabicDigits(Math.round(valKhusus))}</td>
+                <td class="${classAkhir}">${toArabicDigits(valAkhir)}</td>
+            </tr>`;
+        });
+
+        let santriParalel = santriDb.filter(x => x.kelas === s.kelas);
+        let sortedParalel = [...santriParalel].sort((a, b) => getRataRata(b) - getRataRata(a));
+        let rankParalel = sortedParalel.findIndex(x => x.nis === s.nis) + 1;
+
+        let santriRuang = santriDb.filter(x => x.kelasFull === s.kelasFull);
+        let sortedRuang = [...santriRuang].sort((a, b) => getRataRata(b) - getRataRata(a));
+        let rankKelas = sortedRuang.findIndex(x => x.nis === s.nis) + 1;
+
+        return `
+            <div class="raport-box ${isLastPage ? '' : 'page-break'}">
+                <div class="kop-container">
+                    <div class="kop-logo">
+                        <img src="logo.png" alt="Logo Madrasah">
+                    </div>
+                    <div class="kop-teks">
+                        <div class="title-ar">كشف الدرجات الدراسية</div>
+                        <div class="title-ar" style="font-size:22px;">المدرسة الدينية دار الحكمة</div>
+                        <div class="subtitle-ar">بالينرجو - بالين - بوجونجارا</div>
+                        <div class="subtitle-ar" style="font-size:13px; margin-top:3px;">السنة الدراسية: ١٤٤٦-١٤٤٧ هـ / ٢٠٢٥-٢٠٢٦ م</div>
+                    </div>
+                </div>
+
+                <div class="info-grid">
+                    <div class="info-col">
+                        <div class="info-row"><span class="info-label">Nama</span><span class="info-val">: ${s.nama}</span></div>
+                        <div class="info-row"><span class="info-label">Kelas</span><span class="info-val">: ${s.kelas}</span></div>
+                    </div>
+                    <div class="info-col">
+                        <div class="info-row"><span class="info-label">Ruang</span><span class="info-val">: ${s.ruang}</span></div>
+                        <div class="info-row"><span class="info-label">Semester</span><span class="info-val">: ${s.semester}</span></div>
+                    </div>
+                </div>
+
+                <table class="arabic-table">
+                    <thead>
+                        <tr>
+                            <th rowspan="2" style="width: 6%;">الرقم</th>
+                            <th rowspan="2">الكتب الدراسية</th>
+                            <th rowspan="2" style="width: 12%;">KKM</th>
+                            <th colspan="2">أرقام الدرجات الدراسية الخاصة والعامة</th>
+                        </tr>
+                        <tr>
+                            <th style="width: 18%;">الخاصة</th>
+                            <th style="width: 18%;">العامة</th>
+                        </tr>
+                    </thead>
+                    <tbody>${tabelNilaiHtml}</tbody>
+                </table>
+
+                <table class="arabic-table">
+                    <tr>
+                        <td style="text-align: right; width: 64%; font-weight: bold;">جملة أرقام الدرجة الدراسية</td>
+                        <td style="font-weight: bold;">${toArabicDigits(Math.round(total))}</td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: right; font-weight: bold;">درجة الفصل</td>
+                        <td style="font-weight: bold;">${toArabicDigits(rankKelas)} / ${toArabicDigits(santriRuang.length)}</td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: right; font-weight: bold;">درجة العام</td>
+                        <td style="font-weight: bold;">${toArabicDigits(rankParalel)} / ${toArabicDigits(santriParalel.length)}</td>
+                    </tr>
+                </table>
+
+                <table class="table-absensi">
+                    <tr>
+                        <td rowspan="3" style="width: 64%; font-weight: bold; vertical-align: middle;">المواظبة</td>
+                        <td style="width: 18%;">مريض</td>
+                        <td style="width: 18%; font-weight: bold;">${toArabicDigits(s.kehadiran.S)}</td>
+                    </tr>
+                    <tr>
+                        <td>إذن</td>
+                        <td style="font-weight: bold;">${toArabicDigits(s.kehadiran.I)}</td>
+                    </tr>
+                    <tr>
+                        <td>بلا إذن</td>
+                        <td style="font-weight: bold;">${toArabicDigits(s.kehadiran.A)}</td>
+                    </tr>
+                </table>
+
+                <table class="table-ttd">
+                    <tr>
+                        <td>
+                            <div class="ttd-box-content">
+                                <div class="ttd-jabatan-ar">المدرّس / طة</div>
+                                <div class="ttd-nama-latin">${ttdKelas.mudarris}</div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="ttd-box-content">
+                                <div class="ttd-jabatan-ar">رئيس المدرسة</div>
+                                <div class="ttd-nama-latin">${ttdKelas.rais}</div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="ttd-box-content">
+                                <div class="ttd-jabatan-ar">الولي</div>
+                                <div class="ttd-nama-latin">${s.wali}</div>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        `;
+    }
+
+    function renderRaportIndividu() {
+        const nis = document.getElementById('select-cetak-santri').value;
+        const s = santriDb.find(x => x.nis === nis);
+        const container = document.getElementById('area-semua-raport');
+
+        if (s) {
+            container.innerHTML = generateRaportHtml(s, true);
+        }
+    }
+
+    function cetakSatuSantri() {
+        renderRaportIndividu();
+        window.print();
+    }
+
+    function cetakSatuKelas() {
+        const kelasDipilih = document.getElementById('select-cetak-kelas').value;
+        const santriKelas = santriDb.filter(s => s.kelasFull === kelasDipilih);
+
+        if (santriKelas.length === 0) {
+            alert("Tidak ada santri di kelas ini!");
+            return;
+        }
+
+        const container = document.getElementById('area-semua-raport');
+        container.innerHTML = '';
+
+        santriKelas.forEach((s, index) => {
+            const isLast = (index === santriKelas.length - 1);
+            container.innerHTML += generateRaportHtml(s, isLast);
+        });
+
+        setTimeout(() => {
+            window.print();
+        }, 300);
+    }
+</script>
+
+</body>
+</html>
