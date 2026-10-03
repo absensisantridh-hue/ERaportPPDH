@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Raport Santri - Darul Hikmah Bojonegoro</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- Tombol Garis 3 (Hamburger Menu) untuk Tampilan HP/Mobile -->
+<button id="toggle-sidebar" class="mobile-toggle-btn" onclick="toggleSidebar()">
+    <i class="fa-solid fa-bars"></i>
+</button>
+
+<!-- Layer Gelap (Overlay) saat Sidebar Terbuka di HP -->
+<div id="sidebar-overlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+<!-- Sidebar Utama -->
+<aside class="sidebar" id="sidebar">
+    <div class="brand">
+    <img src="logopondok.png" alt="Logo PP Darul Hikmah" style="width: 60px; height: auto; margin-right: 10px;">
+    <div class="brand-text">
+        <h2>E-Raport Santri</h2>
+        <p class="sub-title">PP. Darul Hikmah</p>
+        <p class="sub-location">Balen - Bojonegoro</p>
+    </div>
+</div>
+
+    <ul>
+        <li class="active" data-tab="kelola-santri">
+            <i class="fa-solid fa-user-plus"></i> 1. Input Santri
+        </li>
+        <li data-tab="input-nilai">
+            <i class="fa-solid fa-table-cells"></i> 2. Input Nilai & Kehadiran
+        </li>
+        <li data-tab="kelola-mapel">
+            <i class="fa-solid fa-book"></i> 3. Kelola Mapel & KKM
+        </li>
+        <li data-tab="cetak-raport">
+            <i class="fa-solid fa-print"></i> 4. Cetak Raport
+        </li>
+    </ul>
+
+    <div class="sidebar-footer">
+        <div id="sync-status" class="status-cloud">
+            <i class="fa-solid fa-cloud-arrow-up"></i> Terhubung
+        </div>
+    </div>
+</aside>>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+
+            <!-- TAB 1: KELOLA SANTRI -->
+            <section id="kelola-santri" class="tab-content active">
+                <div class="content-header">
+                    <h2><i class="fa-solid fa-user-plus"></i> Kelola Data Santri</h2>
+                </div>
+
+                <div class="card">
+                    <h3>Tambah Data Santri Baru</h3>
+                    <form id="form-tambah-santri" onsubmit="simpanSantriBaru(event)">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="input-nis">NIS Santri:</label>
+                                <input type="text" id="input-nis" class="form-control" placeholder="Contoh: 101" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="input-nama">Nama Santri (Latin):</label>
+                                <input type="text" id="input-nama" class="form-control" placeholder="Nama lengkap santri" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="input-wali">Nama Wali (Latin):</label>
+                                <input type="text" id="input-wali" class="form-control" placeholder="Nama ayah / wali" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="select-kelas-santri">Pilih Kelas & Ruang:</label>
+                                <select id="select-kelas-santri" class="form-control" required>
+                                    <!-- Terisi via JS -->
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-actions" style="margin-top:15px;">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fa-solid fa-floppy-disk"></i> Simpan Santri
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h3>Daftar Santri Terdaftar</h3>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 50px;">No</th>
+                                    <th>NIS</th>
+                                    <th>Nama Santri</th>
+                                    <th>Wali</th>
+                                    <th>Kelas</th>
+                                    <th style="width: 100px;">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-kelola-santri"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 2: INPUT NILAI & KEHADIRAN (MODEL SPREADSHEET / GOOGLE SHEET) -->
+            <section id="input-nilai" class="tab-content">
+                <div class="content-header">
+                    <h2><i class="fa-solid fa-table-cells"></i> Input Nilai & Kehadiran (Model Spreadsheet)</h2>
+                </div>
+
+                <div class="card">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="select-kelas-nilai">Pilih Kelas:</label>
+                            <select id="select-kelas-nilai" class="form-control" onchange="renderSpreadsheetNilai()">
+                                <!-- Terisi via JS -->
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <h3 style="margin:0;"><i class="fa-solid fa-sheet-plastic"></i> Tabel Input Nilai Massal Kelas</h3>
+                        <button type="button" class="btn btn-primary" onclick="simpanSemuaNilaiSpreadsheet()">
+                            <i class="fa-solid fa-floppy-disk"></i> Simpan Semua Nilai Kelas Ini
+                        </button>
+                    </div>
+                    
+                    <div class="table-responsive spreadsheet-container">
+                        <table class="data-table sheet-table" id="table-spreadsheet-nilai">
+                            <thead id="thead-spreadsheet"></thead>
+                            <tbody id="tbody-spreadsheet"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 3: KELOLA MAPEL & KKM -->
+            <section id="kelola-mapel" class="tab-content">
+                <div class="content-header">
+                    <h2><i class="fa-solid fa-book-open"></i> Kelola Mapel & KKM</h2>
+                </div>
+
+                <div class="card">
+                    <div class="filter-bar" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; gap:10px;">
+                        <div class="form-group inline" style="flex:1;">
+                            <label for="select-kelas-mapel">Pilih Kelas:</label>
+                            <select id="select-kelas-mapel" class="form-control" onchange="renderMapelTable()">
+                                <!-- Terisi via JS -->
+                            </select>
+                        </div>
+                        <button type="button" class="btn btn-secondary" onclick="tambahMapelRow()">
+                            <i class="fa-solid fa-plus"></i> Tambah Mapel Baru
+                        </button>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 50px;">No</th>
+                                    <th>Nama Mata Pelajaran (Bahasa Arab)</th>
+                                    <th style="width: 120px;">KKM</th>
+                                    <th style="width: 100px;">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-mapel"></tbody>
+                        </table>
+                    </div>
+
+                    <div class="form-actions" style="margin-top:20px;">
+                        <button type="button" class="btn btn-success" onclick="simpanMapelKeCloud()">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> Simpan & Sinkronkan Mapel
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+           <!-- TAB 4: CETAK RAPORT -->
+<section id="cetak-raport" class="tab-content">
+    <div class="content-header">
+        <h2><i class="fa-solid fa-print"></i> Cetak Raport Santri</h2>
+    </div>
+
+    <!-- Form Pengaturan Tanda Tangan Raport -->
+<div class="card" style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #ddd;">
+    <h3 style="margin-top: 0; color: #1b4d3e;"><i class="fa-solid fa-pen-nib"></i> Pengaturan Tanda Tangan Raport</h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+        <div>
+            <label><strong>Pilih Kelas:</strong></label>
+            <select id="ttd-pilih-kelas" class="form-control" onchange="muatDataTTDKelas()">
+                <option value="">-- Pilih Kelas --</option>
+                <option value="1 A">1 A</option>
+                <option value="1 B">1 B</option>
+                <option value="1 C">1 C</option>
+                <option value="1 D">1 D</option>
+                <option value="2 A">2 A</option>
+                <option value="2 B">2 B</option>
+                <option value="2 C">2 C</option>
+                <option value="3 Putra">3 Putra</option>
+                <option value="3 Putri">3 Putri</option>
+                <option value="4 Putra">4 Putra</option>
+                <option value="4 Putri">4 Putri</option>
+                <option value="5 Putra">5 Putra</option>
+                <option value="5 Putri">5 Putri</option>
+                <option value="6 Putra">6 Putra</option>
+                <option value="6 Putri">6 Putri</option>
+            </select>
+        </div>
+        <div>
+            <label><strong>Wali Kelas:</strong></label>
+            <input type="text" id="ttd-wali-kelas" class="form-control" placeholder="Nama Wali Kelas">
+        </div>
+        <div>
+            <label><strong>Kepala Madrasah / Mudir:</strong></label>
+            <input type="text" id="ttd-kepala-madrasah" class="form-control" placeholder="Nama Kepala Madrasah">
+        </div>
+    </div>
+    <button onclick="simpanPengaturanTTD()" style="margin-top: 15px; background: #1b4d3e; color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer;">
+        <i class="fa-solid fa-floppy-disk"></i> Simpan Tanda Tangan
+    </button>
+</div>
+
+    <div class="card">
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="select-kelas-cetak">Pilih Kelas:</label>
+                <select id="select-kelas-cetak" class="form-control" onchange="loadSantriCetakDropdown()">
+                    <!-- Terisi via JS -->
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="select-santri-cetak">Pilih Santri (Preview Individu):</label>
+                <select id="select-santri-cetak" class="form-control" onchange="tampilkanPreviewIndividual()">
+                    <option value="">-- Pilih Santri --</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-actions" style="margin-top:20px; gap:10px; flex-wrap:wrap;">
+            <button type="button" class="btn btn-primary" onclick="cetakRaportSatu()">
+                <i class="fa-solid fa-user"></i> Cetak Raport Santri Ini
+            </button>
+            <button type="button" class="btn btn-success" onclick="cetakRaportSatuKelas()">
+                <i class="fa-solid fa-users"></i> Cetak Semua Raport (1 Kelas)
+            </button>
+        </div>
+    </div>
+
+    <!-- PREVIEW AREA -->
+    <div class="card" style="background: #cbd5e1; padding: 20px;">
+        <h3 style="text-align: center; margin-bottom: 15px; color: #1b4d3e;">
+            <i class="fa-solid fa-eye"></i> Review / Preview Raport (Tampilan Cetak)
+        </h3>
+        <div id="print-area" class="print-container">
+            <div style="text-align:center; padding: 40px; color:#64748b; background:#fff; border-radius:8px;">
+                <i class="fa-solid fa-file-invoice" style="font-size: 48px; margin-bottom: 10px;"></i>
+                <p>Silakan pilih Kelas dan Santri di atas untuk menampilkan review raport.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+        </main>
+    </div>
+
+    <!-- Modal Login dengan Background Gambar -->
+<div id="login-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.65)), url('bg-ponpes.jpg') no-repeat center center / cover; display: flex; justify-content: center; align-items: center; z-index: 9999;">
+    <div style="background: rgba(255, 255, 255, 0.642); backdrop-filter: blur(5px); padding: 30px; border-radius: 12px; width: 350px; text-align: center; box-shadow: 0 8px 25px rgba(0,0,0,0.4);">
+        
+        <!-- Logo Pondok -->
+        <img src="logopondok.png" alt="Logo Pondok Pesantren Darul Hikmah" style="width: 100px; height: auto; margin-bottom: 0Px;">
+        
+        <h3 style="margin-bottom: 5px; color: #333; font-weight: bold;">Login Aplikasi</h3>
+        <p style="font-size: 13px; color: #666; margin-bottom: 20px;">E-Raport Santri PP. Darul Hikmah</p>
+        
+        <form id="form-login" onsubmit="prosesLogin(event)">
+            <div style="margin-bottom: 15px; text-align: left;">
+                <label style="font-size: 12px; font-weight: bold; color: #555;">USERNAME</label>
+                <input type="text" id="login-username" placeholder="Masukkan Username" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; margin-top: 5px;">
+            </div>
+            
+            <div style="margin-bottom: 20px; text-align: left;">
+                <label style="font-size: 12px; font-weight: bold; color: #555;">PASSWORD</label>
+                <input type="password" id="login-password" placeholder="Masukkan Password" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; margin-top: 5px;">
+            </div>
+            
+            <button type="submit" style="width: 100%; padding: 12px; background: #2563eb; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.3s;">Masuk Aplikasi</button>
+        </form>
+    </div>
+</div>
+
+    <script src="script.js"></script>
+</body>
+</html>
